@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="そのカード、取る？｜デッキ構築の直感を数値で殴る">
+<meta property="og:description" content="ローグライクデッキ構築の「カード追加は本当に得か」を1万回シミュレーションで即判定。強いカードを足したのに勝率が下がる瞬間を目撃せよ。">
+<meta property="og:image" content="https://d-studylab.github.io/toru-card/og.png">
+<meta property="og:url" content="https://d-studylab.github.io/toru-card/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="デッキ構築のカード追加EVを1万回シミュレーションで判定する教材ゲーム。">
+<title>そのカード、取る？｜デッキ構築の直感を数値で殴る</title>
+<style>
+  :root { --bg:#0f1116; --panel:#181b22; --line:#2a2f3a; --txt:#e7eaef; --sub:#98a1ad;
+          --acc:#7cc4ff; --good:#6bdf9a; --bad:#ff8f8f; --gold:#e8c35a; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f4f6f8; --panel:#fff; --line:#dde3ea; --txt:#1b2027; --sub:#5b6673;
+            --acc:#1f6fb2; --good:#1f8a52; --bad:#c0492f; --gold:#a6791b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:"Segoe UI","Yu Gothic UI",Meiryo,sans-serif; line-height:1.6; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 12px; }
+  h1 { font-size: 21px; text-align:center; margin: 8px 0 2px; }
+  .sub { color:var(--sub); font-size:12.5px; text-align:center; margin-bottom:10px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; margin-bottom:10px; }
+  button { background:var(--acc); color:#08202f; font-weight:bold; border:0; border-radius:10px; padding:9px 16px; font-size:14px; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); font-weight:normal; }
+  button:disabled { opacity:.35; cursor:default; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td { padding:5px 4px; border-bottom:1px dashed var(--line); vertical-align:middle; }
+  .cnt { font-size:18px; font-weight:bold; width:1.6em; text-align:center; }
+  .pm { width:34px; padding:5px 0; font-size:16px; background:var(--panel); color:var(--txt); border:1.5px solid var(--line); }
+  .cname { font-weight:bold; }
+  .cdesc { font-size:11.5px; color:var(--sub); }
+  .cand { outline:2px solid var(--gold); border-radius:8px; }
+  .vs { display:flex; gap:12px; text-align:center; }
+  .vs > div { flex:1; border:1px solid var(--line); border-radius:12px; padding:10px; }
+  .vs b { font-size:30px; }
+  .bar { height:12px; border-radius:6px; background:var(--line); overflow:hidden; margin-top:6px; }
+  .bar i { display:block; height:100%; }
+  .delta { text-align:center; font-size:19px; font-weight:bold; margin-top:8px; min-height:1.4em; }
+  .msg { font-size:13.5px; color:var(--sub); }
+  .presets { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; }
+  .note { font-size:12px; color:var(--sub); margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🃏 そのカード、取る？</h1>
+  <div class="sub">ローグライクデッキ構築の永遠の問い——「このカード、デッキに入れるべき？」を<b>1万回の対戦シミュレーション</b>で即答する。</div>
+
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--sub)">
+      <span>👹 敵: HP95・攻撃6+乱高下(〜+12)・毎ターン強化</span><span>🧑 あなた: HP70・エナジー3・ドロー4</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <b>デッキ（<span id="dsize">10</span>枚）</b>
+    <span class="msg">— 候補カードの行の「取る？」を押すと判定</span>
+    <table id="decktable"></table>
+    <div class="presets">
+      <button class="ghost" onclick="loadPreset('base')">初期デッキ</button>
+      <button class="ghost" onclick="loadPreset('combo')">コンボ軸</button>
+      <button class="ghost" onclick="loadPreset('plain')">弱デッキ</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="vs">
+      <div><div style="font-size:12px;color:var(--sub)">今のデッキ</div><b id="w0">--%</b><div class="bar"><i id="b0" style="width:0%;background:var(--acc)"></i></div></div>
+      <div><div style="font-size:12px;color:var(--sub)">＋<span id="candname">候補</span> 1枚</div><b id="w1">--%</b><div class="bar"><i id="b1" style="width:0%;background:var(--gold)"></i></div></div>
+    </div>
+    <div class="delta" id="delta">カード行の「取る？」を押すと1万回×2の勝負が走る</div>
+    <div style="text-align:center;margin-top:4px"><button class="ghost" onclick="copyResult()" id="copybtn" disabled>結果をコピー</button><span class="msg" id="copied"></span></div>
+  </div>
+
+  <div class="panel" style="font-size:14px">
+    <b>💡 このシミュレータで見えること</b><br>
+    ・<b>強いカードを足したのに勝率が下がる</b>瞬間（コンボ軸に「中途半端」を足してみて）——キーカードを引く確率が薄まる「デッキ太らせの罠」<br>
+    ・同じカードが<b>弱いデッキでは正解</b>になる——カードに絶対評価はなく、デッキ文脈がすべて<br>
+    ・呪いの本当の値段
+  </div>
+
+  <div class="note">簡略化した抽象モデルです（実在ゲームの再現ではありません）。方策は固定の貪欲AI・同一シードの1万回対戦で比較。すべて端末内で計算・送信なし。／ D-studyLab</div>
+</div>
+
+<script src="deckev.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const ORDER = ['strike', 'heavy', 'combo', 'guard', 'bigwall', 'cycle', 'mediocre', 'curse'];
+let deck = { strike: 5, guard: 4, heavy: 1 };
+let lastEval = null;
+
+const PRESETS = {
+  base: { strike: 5, guard: 4, heavy: 1 },
+  combo: { combo: 5, cycle: 3, guard: 2 },
+  plain: { strike: 4, guard: 4 },
+};
+function loadPreset(k) { deck = { ...PRESETS[k] }; renderDeck(); evalBase(); }
+
+function renderDeck() {
+  const t = $('decktable'); t.innerHTML = '';
+  let size = 0;
+  for (const k of ORDER) {
+    const n = deck[k] || 0; size += n;
+    const c = DECKEV.CARDS[k];
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td><span class="cname">${c.name}</span> <span class="cdesc">${c.cost}⚡ ${c.desc}</span></td>` +
+      `<td class="cnt">${n}</td>` +
+      `<td style="white-space:nowrap"><button class="pm" onclick="mod('${k}',-1)">−</button> <button class="pm" onclick="mod('${k}',1)">＋</button></td>` +
+      `<td><button class="ghost" style="padding:5px 10px;font-size:12.5px" onclick="ask('${k}')">取る？</button></td>`;
+    t.appendChild(tr);
+  }
+  $('dsize').textContent = size;
+}
+function mod(k, d) {
+  deck[k] = Math.max(0, Math.min(8, (deck[k] || 0) + d));
+  if (deck[k] === 0) delete deck[k];
+  renderDeck(); evalBase();
+}
+let baseResult = null;
+function evalBase() {
+  const size = Object.values(deck).reduce((a, b) => a + b, 0);
+  if (size < 5) { $('w0').textContent = '--%'; $('delta').textContent = 'デッキは5枚以上で'; baseResult = null; return; }
+  baseResult = DECKEV.evaluate(11, deck, 10000);
+  $('w0').textContent = (baseResult.winRate * 100).toFixed(1) + '%';
+  $('b0').style.width = (baseResult.winRate * 100) + '%';
+  $('w1').textContent = '--%'; $('b1').style.width = '0%';
+  $('delta').textContent = '';
+  $('copybtn').disabled = true;
+}
+function ask(k) {
+  if (!baseResult) evalBase();
+  if (!baseResult) return;
+  const c = DECKEV.CARDS[k];
+  $('candname').textContent = c.name;
+  const withCard = { ...deck, [k]: (deck[k] || 0) + 1 };
+  const r1 = DECKEV.evaluate(11, withCard, 10000);
+  $('w1').textContent = (r1.winRate * 100).toFixed(1) + '%';
+  $('b1').style.width = (r1.winRate * 100) + '%';
+  const d = (r1.winRate - baseResult.winRate) * 100;
+  const el = $('delta');
+  if (d > 1.5) { el.innerHTML = `<span style="color:var(--good)">+${d.toFixed(1)}pt — 取れ！</span>`; }
+  else if (d < -1.5) { el.innerHTML = `<span style="color:var(--bad)">${d.toFixed(1)}pt — 取るな！（デッキが薄まる）</span>`; }
+  else { el.innerHTML = `<span style="color:var(--sub)">${d >= 0 ? '+' : ''}${d.toFixed(1)}pt — 誤差。スキップが無難</span>`; }
+  lastEval = { card: c.name, base: baseResult.winRate, plus: r1.winRate, d };
+  $('copybtn').disabled = false;
+}
+function copyResult() {
+  if (!lastEval) return;
+  const t = `🃏そのカード、取る？\n「${lastEval.card}」を追加 → 勝率${(lastEval.base * 100).toFixed(1)}%→${(lastEval.plus * 100).toFixed(1)}%（${lastEval.d >= 0 ? '+' : ''}${lastEval.d.toFixed(1)}pt）\nデッキ構築の直感を1万回シミュで検算↓\nhttps://d-studylab.github.io/toru-card/`;
+  if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {});
+  $('copied').textContent = ' コピーしました';
+}
+renderDeck(); evalBase();
+</script>
+</body>
+</html>
