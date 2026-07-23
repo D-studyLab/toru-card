@@ -158,5 +158,18 @@ function copyResult() {
 }
 renderDeck(); evalBase();
 </script>
+
+<section id="about" style="border-top:1px solid var(--line);padding:22px 0 40px">
+  <div style="max-width:640px;margin:0 auto;padding:0 12px;line-height:1.9">
+    <h2 style="font-size:16.5px;margin:0 0 8px;padding-left:10px;border-left:4px solid var(--acc)">このゲームのルール</h2>
+    <p style="font-size:14px;margin:0 0 20px">「そのカード、取る？」は、デッキ構築ゲームでおなじみの悩み——強そうな一枚を入れるか見送るか——を、数値で検算できるシミュレーターです。カードを追加した場合としなかった場合のそれぞれについて、対戦を1万回自動で回し、最終勝率がどれだけ動くかをモンテカルロ法で表示します。「事故要因を増やすと安定が落ちる」「尖った一枚は平均も分散も上がる」といった経験則を、実数で確かめられます。</p>
+    <h2 style="font-size:16.5px;margin:0 0 8px;padding-left:10px;border-left:4px solid var(--acc)">攻略のヒント</h2>
+    <p style="font-size:14px;margin:0 0 20px">いちばん外れやすい直感は「単体で強いカードは常に入れ得」というものです。一枚のパワーが高くても、デッキ全体の巡りを鈍らせるなら勝率はむしろ下がります。追加とスキップの勝率差が僅差のときは、引きの安定を取るほうが良い場面が多い——このあたりを自分の目で確認してみてください。設定を変えると即座に再計算されるので、仮説→検証を繰り返す遊び方が合っています。</p>
+    <h2 style="font-size:16.5px;margin:0 0 8px;padding-left:10px;border-left:4px solid var(--acc)">つくった理由・仕掛け</h2>
+    <p style="font-size:14px;margin:0 0 20px">デッキ構築の判断は勘で語られがちですが、突き詰めれば期待値の比較です。その計算を目に見える形にしたくて、確率シリーズの一本として作りました。内部では方針を固定したAI同士を同じ乱数の並びで対戦させるため、条件を一つ変えたときの影響だけが純粋に取り出せます。実在のカードゲームの再現ではなく、確率感覚を鍛えるための抽象モデルです。</p>
+    <p style="font-size:13px;color:var(--sub);margin:0">もっと詳しい遊び方 → <a href="https://d-studylab.com/games/guide/toru-card.html" style="color:var(--acc)">そのカード、取る？の解説ページ</a><br>ほかのゲーム → <a href="https://d-studylab.com/games/" style="color:var(--acc)">ミニゲームゲームズ一覧</a></p>
+  </div>
+</section>
+
 </body>
 </html>
