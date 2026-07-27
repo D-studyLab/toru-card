@@ -24,13 +24,15 @@
   h1 { font-size: 21px; text-align:center; margin: 8px 0 2px; }
   .sub { color:var(--sub); font-size:12.5px; text-align:center; margin-bottom:10px; }
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; margin-bottom:10px; }
-  button { background:var(--acc); color:#08202f; font-weight:bold; border:0; border-radius:10px; padding:9px 16px; font-size:14px; cursor:pointer; }
+  button { background:var(--acc); color:#08202f; font-weight:bold; border:0; border-radius:10px; padding:9px 16px; font-size:14px; cursor:pointer; min-height:44px; }
   button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); font-weight:normal; }
   button:disabled { opacity:.35; cursor:default; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   td { padding:5px 4px; border-bottom:1px dashed var(--line); vertical-align:middle; }
   .cnt { font-size:18px; font-weight:bold; width:1.6em; text-align:center; }
-  .pm { width:34px; padding:5px 0; font-size:16px; background:var(--panel); color:var(--txt); border:1.5px solid var(--line); }
+  /* スマホで押しやすい高さ（44px）にする。幅は表がはみ出さない範囲で */
+  .pm { width:40px; min-height:44px; padding:0; font-size:18px; line-height:1;
+        background:var(--panel); color:var(--txt); border:1.5px solid var(--line); }
   .cname { font-weight:bold; }
   .cdesc { font-size:11.5px; color:var(--sub); }
   .cand { outline:2px solid var(--gold); border-radius:8px; }
@@ -113,7 +115,7 @@ function renderDeck() {
       `<td><span class="cname">${c.name}</span> <span class="cdesc">${c.cost}⚡ ${c.desc}</span></td>` +
       `<td class="cnt">${n}</td>` +
       `<td style="white-space:nowrap"><button class="pm" onclick="mod('${k}',-1)">−</button> <button class="pm" onclick="mod('${k}',1)">＋</button></td>` +
-      `<td><button class="ghost" style="padding:5px 10px;font-size:12.5px" onclick="ask('${k}')">取る？</button></td>`;
+      `<td><button class="ghost" style="padding:9px 12px;font-size:12.5px;white-space:nowrap;min-height:44px" onclick="ask('${k}')">取る？</button></td>`;
     t.appendChild(tr);
   }
   $('dsize').textContent = size;
