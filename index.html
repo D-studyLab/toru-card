@@ -147,9 +147,10 @@ function ask(k) {
   $('b1').style.width = (r1.winRate * 100) + '%';
   const d = (r1.winRate - baseResult.winRate) * 100;
   const el = $('delta');
-  if (d > 1.5) { el.innerHTML = `<span style="color:var(--good)">+${d.toFixed(1)}pt — 取れ！</span>`; }
-  else if (d < -1.5) { el.innerHTML = `<span style="color:var(--bad)">${d.toFixed(1)}pt — 取るな！（デッキが薄まる）</span>`; }
-  else { el.innerHTML = `<span style="color:var(--sub)">${d >= 0 ? '+' : ''}${d.toFixed(1)}pt — 誤差。スキップが無難</span>`; }
+  // 判定の3分岐に合わせて音を分ける（取れ＝上向き／取るな＝下向き／誤差＝中立）
+  if (d > 1.5) { el.innerHTML = `<span style="color:var(--good)">+${d.toFixed(1)}pt — 取れ！</span>`; if (window.SND) SND.ok(); }
+  else if (d < -1.5) { el.innerHTML = `<span style="color:var(--bad)">${d.toFixed(1)}pt — 取るな！（デッキが薄まる）</span>`; if (window.SND) SND.ng(); }
+  else { el.innerHTML = `<span style="color:var(--sub)">${d >= 0 ? '+' : ''}${d.toFixed(1)}pt — 誤差。スキップが無難</span>`; if (window.SND) SND.tick(); }
   lastEval = { card: c.name, base: baseResult.winRate, plus: r1.winRate, d };
   $('copybtn').disabled = false;
 }
@@ -389,13 +390,29 @@ renderDeck(); evalBase();
      各ゲームは作りがばらばらなので、まず「押したら鳴る」だけを
      イベント委譲でまとめて付ける。ゲーム固有の音（正解・勝敗）は
      そのゲームの中から SND.ok() などを呼んで足す。            */
+  var CLICKABLE = "button,[role=button],.btn,a[href],summary," +
+                  "input[type=button],input[type=submit],label,[onclick]";
+
+  /** これは押せるものか。
+      ⚠ セレクタだけでは足りない。モンティホールのドアのように
+         <div class="door"> に onclick を **JSから** 付けている作りが多く、
+         その場合 [onclick] 属性は無い。実際 2026-08-16 に取りこぼした。
+         → 祖先を数段さかのぼって、onclick を持つか cursor:pointer かで判断する。 */
+  function isClickable(t) {
+    if (t.closest(CLICKABLE)) return true;
+    for (var el = t, i = 0; el && el.nodeType === 1 && i < 5; el = el.parentElement, i++) {
+      if (el.onclick) return true;
+      try { if (getComputedStyle(el).cursor === "pointer") return true; } catch (e) {}
+    }
+    return false;
+  }
+
   function autoWire() {
     document.addEventListener("pointerdown", function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
       if (t.closest("#dslSndBtn")) return;                    // トグル自身は二重に鳴らさない
-      if (t.closest("button,[role=button],.btn,a[href],summary,input[type=button],input[type=submit],label"))
-        SND.click();
+      if (isClickable(t)) SND.click();
     }, true);
     document.addEventListener("keydown", function (e) {
       if (e.repeat) return;
